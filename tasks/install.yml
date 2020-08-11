@@ -1,0 +1,82 @@
+---
+- name: create vmagent system group
+  group:
+    name: vmagent
+    system: true
+    state: present
+
+- name: create vmagent system user
+  user:
+    name: vmagent
+    system: true
+    shell: "/usr/sbin/nologin"
+    group: vmagent
+    createhome: false
+    home: "{{ vmagent_db_dir }}"
+
+- name: create vmagent data directory
+  file:
+    path: "{{ vmagent_db_dir }}"
+    state: directory
+    owner: vmagent
+    group: vmagent
+    mode: 0755
+
+- name: create vmagent configuration directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: vmagent
+    mode: 0770
+  with_items:
+    - "{{ vmagent_config_dir }}"
+    - "{{ vmagent_config_dir }}/targets"
+
+- block:
+    - name: download vmagent binary to local folder
+      become: false
+      get_url:
+        url: "https://github.com/VictoriaMetrics/VictoriaMetrics/releases/download/v{{ vmagent_version }}/vmutils-v{{ vmagent_version }}.tar.gz"
+        dest: "/tmp/vmutils-v{{ vmagent_version }}.tar.gz"
+        checksum: "sha256:{{ __vmagent_checksum }}"
+      register: _download_archive
+      until: _download_archive is succeeded
+      retries: 5
+      delay: 2
+      # run_once: true # <-- this cannot be set due to multi-arch support
+      delegate_to: localhost
+      check_mode: false
+
+    - name: unpack vmagent binaries
+      become: false
+      unarchive:
+        src: "/tmp/vmutils-v{{ vmagent_version }}.tar.gz"
+        dest: "/tmp"
+      delegate_to: localhost
+      check_mode: false
+
+    - name: propagate official vmutils binaries
+      copy:
+        src: "/tmp/{{ item }}"
+        dest: "{{ vmagent_binary_install_dir }}/{{ item }}"
+        mode: 0755
+        owner: root
+        group: root
+      with_items:
+        - vmagent-prod
+      notify:
+        - restart vmagent
+
+  when:
+    - not vmagent_skip_install
+
+- name: create systemd service unit
+  template:
+    src: vmagent.service.j2
+    dest: /lib/systemd/system/vmagent.service
+    owner: root
+    group: root
+    mode: 0644
+  notify:
+    - restart vmagent

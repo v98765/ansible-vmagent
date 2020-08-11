@@ -1,0 +1,12 @@
+---
+- name: configure vmagent
+  template:
+    src: "{{ vmagent_config_file }}"
+    dest: "{{ vmagent_config_dir }}/vmagent.yml"
+    force: true
+    owner: root
+    group: vmagent
+    mode: 0640
+  notify:
+    - reload vmagent
+

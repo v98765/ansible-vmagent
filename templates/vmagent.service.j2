@@ -1,0 +1,27 @@
+{{ ansible_managed | comment }}
+
+[Unit]
+Description=vmagent
+After=network-online.target
+
+[Service]
+Type=simple
+Environment="GOMAXPROCS={{ ansible_processor_vcpus|default(ansible_processor_count) }}"
+User=vmagent
+Group=vmagent
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStart={{ vmagent_binary_install_dir }}/vmagent-prod \
+  -promscrape.config={{ vmagent_config_dir }}/vmagent.yml \
+  -remoteWrite.tmpDataPath={{ vmagent_db_dir }} \
+{% for item in vmagent_remote_write %}
+  -remoteWrite.url={{ item.url }}{% if not loop.last %} {%endif%}
+{% endfor %}{% for flag, flag_value in vmagent_config_flags_extra.items() %}\
+  -{{ flag }}{% if flag_value %}={{ flag_value }}{% endif %} {% endfor %}
+
+SyslogIdentifier=vmagent
+KillMode=control-group
+Restart=on-failure
+LimitNOFILE=65536
+
+[Install]
+WantedBy=multi-user.target

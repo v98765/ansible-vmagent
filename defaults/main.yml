@@ -1,0 +1,45 @@
+---
+vmagent_version: 1.39.4
+vmagent_skip_install: false
+
+vmagent_config_dir: /etc/vmagent
+vmagent_db_dir: /var/lib/vmagent
+vmagent_binary_install_dir: /usr/local/bin
+
+#vmagent_config_flags_extra: {}
+vmagent_config_flags_extra:
+ promscrape.suppressScrapeErrors: true
+ http.maxGracefulShutdownDuration: 10s
+
+#victoria-metrics host. at least one `-remoteWrite.url` must be set
+vmagent_remote_write:
+  - url: http://{{ ansible_host }}:8428/api/v1/write
+#  - url: http://vm2:8428/api/v1/write
+
+vmagent_global:
+  scrape_interval: 60s
+  scrape_timeout: 30s
+
+vmagent_scrape_configs:
+  - job_name: "vmagent"
+    static_configs:
+    - targets:
+      - "{{ ansible_host }}:8429"
+
+#  - job_name: 'victoria-metrics'
+#    static_configs:
+#    - targets:
+#      - "{{ ansible_host }}:8428"
+#
+#  - job_name: 'blackbox'
+#    static_configs:
+#    - targets:
+#          - "{{ ansible_host }}:9115"
+#
+#  - job_name: 'snmp'
+#    static_configs:
+#    - targets:
+#          - "{{ ansible_host }}:9116"
+
+# Alternative config file name, searched in ansible templates path.
+vmagent_config_file: 'vmagent.yml.j2'

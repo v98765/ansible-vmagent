@@ -6,7 +6,6 @@ After=network-online.target
 
 [Service]
 Type=simple
-Environment="GOMAXPROCS={{ ansible_processor_vcpus|default(ansible_processor_count) }}"
 User=vmagent
 Group=vmagent
 ExecReload=/bin/kill -HUP $MAINPID
@@ -21,7 +20,7 @@ ExecStart={{ vmagent_binary_install_dir }}/vmagent-prod \
 SyslogIdentifier=vmagent
 KillMode=control-group
 Restart=on-failure
-LimitNOFILE=65536
+LimitNOFILE=4096
 
 [Install]
 WantedBy=multi-user.target

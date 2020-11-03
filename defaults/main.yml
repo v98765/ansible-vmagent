@@ -1,5 +1,5 @@
 ---
-vmagent_version: 1.44.0
+vmagent_version: 1.45.0
 vmagent_skip_install: false
 
 vmagent_config_dir: /etc/vmagent

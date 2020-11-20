@@ -16,6 +16,9 @@ vmagent_remote_write:
   - url: http://{{ ansible_host }}:8428/api/v1/write
 #  - url: http://vm2:8428/api/v1/write
 
+vmagent_fd_files:
+  - vmagent/targets/*.yaml
+
 vmagent_global:
   scrape_interval: 60s
   scrape_timeout: 30s

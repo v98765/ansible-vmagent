@@ -10,3 +10,13 @@
     validate: "{{ vmagent_binary_install_dir }}/vmagent-prod -dryRun -promscrape.config=%s"
   notify:
     - reload vmagent
+
+- name: copy targets
+  copy:
+    src: "{{ item }}"
+    dest: "{{ vmagent_config_dir }}/targets/"
+    force: true
+    owner: root
+    group: vmagent
+    mode: 0644
+  with_fileglob: "{{ vmagent_fd_files }}"
